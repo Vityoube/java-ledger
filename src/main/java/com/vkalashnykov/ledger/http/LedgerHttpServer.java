@@ -15,6 +15,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -98,13 +99,13 @@ public final class LedgerHttpServer implements AutoCloseable {
     private Response route(HttpExchange exchange) throws IOException {
         String method = exchange.getRequestMethod();
         String path = exchange.getRequestURI().getPath();
-        if (path.equals(ACCOUNTS_PATH) && HttpMethod.POST.matches(method)) {
+        if (Objects.equals(path, ACCOUNTS_PATH) && HttpMethod.POST.matches(method)) {
             return createAccount(readBody(exchange, CreateAccountBody.class));
         }
-        if (path.startsWith(ACCOUNT_PATH_PREFIX) && HttpMethod.GET.matches(method)) {
+        if (path != null && path.startsWith(ACCOUNT_PATH_PREFIX) && HttpMethod.GET.matches(method)) {
             return getAccount(path.substring(ACCOUNT_PATH_PREFIX.length()));
         }
-        if (path.equals(TRANSFERS_PATH) && HttpMethod.POST.matches(method)) {
+        if (Objects.equals(path,TRANSFERS_PATH) && HttpMethod.POST.matches(method)) {
             return transfer(exchange);
         }
         return error(HttpStatus.NOT_FOUND, "no such endpoint");

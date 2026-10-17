@@ -50,9 +50,10 @@ public final class Ledger {
             claim.outcome.complete(outcome);
             return outcome;
         } catch (RuntimeException e) {
-            pending.remove(idempotencyKey, claim);
             claim.outcome.completeExceptionally(e);
             throw e;
+        } finally {
+            pending.remove(idempotencyKey, claim);
         }
     }
 
