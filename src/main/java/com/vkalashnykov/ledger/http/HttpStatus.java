@@ -8,7 +8,6 @@ enum HttpStatus {
     BAD_REQUEST(HttpURLConnection.HTTP_BAD_REQUEST),
     NOT_FOUND(HttpURLConnection.HTTP_NOT_FOUND),
     CONFLICT(HttpURLConnection.HTTP_CONFLICT),
-    // The JDK has no constant for 422.
     UNPROCESSABLE_ENTITY(422),
     INTERNAL_SERVER_ERROR(HttpURLConnection.HTTP_INTERNAL_ERROR);
 
