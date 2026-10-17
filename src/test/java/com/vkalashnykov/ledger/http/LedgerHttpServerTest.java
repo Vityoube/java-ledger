@@ -18,7 +18,7 @@ class LedgerHttpServerTest {
 
     private static final String ACCOUNTS = "/accounts";
     private static final String TRANSFERS = "/transfers";
-    private static final String IDEMPOTENCY_KEY_HEADER = "Idempotency-Key";
+    private static final String CORRELATION_ID_HEADER = "Correlation-Id";
     private static final String CONTENT_TYPE_HEADER = "Content-Type";
     private static final String JSON_CONTENT_TYPE = "application/json";
 
@@ -107,12 +107,12 @@ class LedgerHttpServerTest {
         assertEquals(expected.code(), response.statusCode(), response.body());
     }
 
-    private HttpResponse<String> post(String path, String body, String idempotencyKey) throws Exception {
+    private HttpResponse<String> post(String path, String body, String correlationId) throws Exception {
         HttpRequest.Builder request = HttpRequest.newBuilder(URI.create(base + path))
                 .header(CONTENT_TYPE_HEADER, JSON_CONTENT_TYPE)
                 .POST(HttpRequest.BodyPublishers.ofString(body));
-        if (idempotencyKey != null) {
-            request.header(IDEMPOTENCY_KEY_HEADER, idempotencyKey);
+        if (correlationId != null) {
+            request.header(CORRELATION_ID_HEADER, correlationId);
         }
         return client.send(request.build(), HttpResponse.BodyHandlers.ofString());
     }

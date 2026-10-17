@@ -31,7 +31,7 @@ public final class LedgerHttpServer implements AutoCloseable {
 
     private static final String CONTENT_TYPE_HEADER = "Content-Type";
     private static final String JSON_CONTENT_TYPE = "application/json";
-    private static final String IDEMPOTENCY_KEY_HEADER = "Idempotency-Key";
+    private static final String CORRELATION_ID_HEADER = "Correlation-Id";
 
     private static final String ERROR_FIELD = "error";
 
@@ -129,15 +129,15 @@ public final class LedgerHttpServer implements AutoCloseable {
     }
 
     private Response transfer(HttpExchange exchange) throws IOException {
-        String key = exchange.getRequestHeaders().getFirst(IDEMPOTENCY_KEY_HEADER);
-        if (key == null || key.isBlank()) {
-            throw new IllegalArgumentException(IDEMPOTENCY_KEY_HEADER + " header is required");
+        String correlationId = exchange.getRequestHeaders().getFirst(CORRELATION_ID_HEADER);
+        if (correlationId == null || correlationId.isBlank()) {
+            throw new IllegalArgumentException(CORRELATION_ID_HEADER + " header is required");
         }
         TransferBody body = readBody(exchange, TransferBody.class);
         if (body == null || body.from() == null || body.to() == null || body.amount() == null) {
             throw new IllegalArgumentException("from, to and amount are required");
         }
-        TransferOutcome outcome = ledger.transfer(key, new TransferRequest(body.from(), body.to(), body.amount()));
+        TransferOutcome outcome = ledger.transfer(correlationId, new TransferRequest(body.from(), body.to(), body.amount()));
         TransferView view = new TransferView(
                 outcome.transferId(),
                 outcome.status().name(),

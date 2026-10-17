@@ -7,7 +7,7 @@
     const run = Date.now();
     client.global.set("alice", "alice-" + run);
     client.global.set("bob", "bob-" + run);
-    client.global.set("key", "key-" + run);
+    client.global.set("correlationId", "correlation-" + run);
 %}
 POST {{host}}/accounts
 Content-Type: application/json
@@ -81,7 +81,7 @@ GET {{host}}/accounts/does-not-exist
 ### 7. Transfer 30 from alice to bob
 POST {{host}}/transfers
 Content-Type: application/json
-Idempotency-Key: {{key}}
+Correlation-Id: {{correlationId}}
 
 {"from": "{{alice}}", "to": "{{bob}}", "amount": 30}
 
@@ -96,7 +96,7 @@ Idempotency-Key: {{key}}
 ### 8. Retry with the same key: same outcome, applied once
 POST {{host}}/transfers
 Content-Type: application/json
-Idempotency-Key: {{key}}
+Correlation-Id: {{correlationId}}
 
 {"from": "{{alice}}", "to": "{{bob}}", "amount": 30}
 
@@ -128,7 +128,7 @@ GET {{host}}/accounts/{{bob}}
 ### 11. Same key, different body: conflict, nothing applied
 POST {{host}}/transfers
 Content-Type: application/json
-Idempotency-Key: {{key}}
+Correlation-Id: {{correlationId}}
 
 {"from": "{{alice}}", "to": "{{bob}}", "amount": 50}
 
@@ -141,7 +141,7 @@ Idempotency-Key: {{key}}
 ### 12. Insufficient funds
 POST {{host}}/transfers
 Content-Type: application/json
-Idempotency-Key: {{key}}-overdraw
+Correlation-Id: {{correlationId}}-overdraw
 
 {"from": "{{alice}}", "to": "{{bob}}", "amount": 1000}
 
@@ -165,7 +165,7 @@ GET {{host}}/accounts/{{alice}}
 ### 14. Unknown destination account
 POST {{host}}/transfers
 Content-Type: application/json
-Idempotency-Key: {{key}}-ghost
+Correlation-Id: {{correlationId}}-ghost
 
 {"from": "{{alice}}", "to": "ghost-account", "amount": 10}
 
@@ -176,7 +176,7 @@ Idempotency-Key: {{key}}-ghost
     });
 %}
 
-### 15. Missing Idempotency-Key
+### 15. Missing Correlation-Id
 POST {{host}}/transfers
 Content-Type: application/json
 
@@ -191,7 +191,7 @@ Content-Type: application/json
 ### 16. Transfer to the same account
 POST {{host}}/transfers
 Content-Type: application/json
-Idempotency-Key: {{key}}-same
+Correlation-Id: {{correlationId}}-same
 
 {"from": "{{alice}}", "to": "{{alice}}", "amount": 10}
 
@@ -204,7 +204,7 @@ Idempotency-Key: {{key}}-same
 ### 17. Zero amount
 POST {{host}}/transfers
 Content-Type: application/json
-Idempotency-Key: {{key}}-zero
+Correlation-Id: {{correlationId}}-zero
 
 {"from": "{{alice}}", "to": "{{bob}}", "amount": 0}
 
@@ -217,7 +217,7 @@ Idempotency-Key: {{key}}-zero
 ### 18. Fractional amount
 POST {{host}}/transfers
 Content-Type: application/json
-Idempotency-Key: {{key}}-fraction
+Correlation-Id: {{correlationId}}-fraction
 
 {"from": "{{alice}}", "to": "{{bob}}", "amount": 1.5}
 
@@ -230,7 +230,7 @@ Idempotency-Key: {{key}}-fraction
 ### 19. Malformed JSON
 POST {{host}}/transfers
 Content-Type: application/json
-Idempotency-Key: {{key}}-bad-json
+Correlation-Id: {{correlationId}}-bad-json
 
 not json
 

@@ -94,7 +94,6 @@ class ConcurrencyTest {
         }
 
         assertEquals(accounts * opening, total, "money was created or destroyed");
-        // Every applied transfer has a debit and a credit that cancel out (double-entry).
         assertTrue(deltaByTransfer.values().stream().allMatch(sum -> sum == 0));
         assertEquals(completedTotal * 2, postings);
     }
@@ -170,7 +169,6 @@ class ConcurrencyTest {
                     () -> ledger.transfer("k1", new TransferRequest("alice", "bob", 10)));
             assertTrue(entered.await(5, TimeUnit.SECONDS));
 
-            // alice's lock is held by the blocked transfer; this one must still finish.
             TransferOutcome other = pool.submit(
                     () -> ledger.transfer("k2", new TransferRequest("carol", "dave", 10))).get(5, TimeUnit.SECONDS);
             assertEquals(Status.COMPLETED, other.status());

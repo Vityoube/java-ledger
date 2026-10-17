@@ -34,16 +34,16 @@ public final class Ledger {
         return store.findAccount(id);
     }
 
-    public TransferOutcome transfer(String idempotencyKey, TransferRequest request) {
-        requireText(idempotencyKey, "idempotencyKey");
+    public TransferOutcome transfer(String correlationId, TransferRequest request) {
+        requireText(correlationId, "correlationId");
         if (request == null) {
             throw new IllegalArgumentException("request is required");
         }
 
         Pending claim = new Pending(request);
-        Pending existing = pending.putIfAbsent(idempotencyKey, claim);
+        Pending existing = pending.putIfAbsent(correlationId, claim);
         if (existing != null) {
-            return existing.await(idempotencyKey, request);
+            return existing.await(correlationId, request);
         }
         try {
             TransferOutcome outcome = store.applyTransfer(nextTransferId.getAndIncrement(), request);
@@ -53,7 +53,7 @@ public final class Ledger {
             claim.outcome.completeExceptionally(e);
             throw e;
         } finally {
-            pending.remove(idempotencyKey, claim);
+            pending.remove(correlationId, claim);
         }
     }
 
@@ -71,10 +71,10 @@ public final class Ledger {
             this.request = request;
         }
 
-        TransferOutcome await(String key, TransferRequest retry) {
+        TransferOutcome await(String correlationId, TransferRequest retry) {
             if (!request.equals(retry)) {
                 throw new IdempotencyConflictException(
-                        "idempotency key %s was already used for a different transfer".formatted(key));
+                        "correlation id %s was already used for a different transfer".formatted(correlationId));
             }
             try {
                 return outcome.join();

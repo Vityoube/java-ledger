@@ -22,15 +22,15 @@ Amounts are integers in minor units (for example cents). Responses are JSON.
 |---|---|---|
 | `POST /accounts` `{"id":"alice","openingBalance":500}` (`openingBalance` optional, default 0) | `201` `{"id","balance"}` | `409` account exists, `400` bad input |
 | `GET /accounts/{id}` | `200` `{"id","balance"}` | `404` unknown account |
-| `POST /transfers` with header `Idempotency-Key: <key>` and `{"from":"alice","to":"bob","amount":30}` | `201` completed | `422` rejected (`INSUFFICIENT_FUNDS` or `UNKNOWN_ACCOUNT`), `409` key reused for a different request, `400` bad input or missing key |
+| `POST /transfers` with header `Correlation-Id: <key>` and `{"from":"alice","to":"bob","amount":30}` | `201` completed | `422` rejected (`INSUFFICIENT_FUNDS` or `UNKNOWN_ACCOUNT`), `409` correlation id reused for a different request, `400` bad input or missing header |
 
 Example:
 
 ```
 curl -X POST localhost:8080/accounts -d '{"id":"alice","openingBalance":100}'
 curl -X POST localhost:8080/accounts -d '{"id":"bob"}'
-curl -X POST localhost:8080/transfers -H 'Idempotency-Key: t-1' -d '{"from":"alice","to":"bob","amount":30}'
-curl -X POST localhost:8080/transfers -H 'Idempotency-Key: t-1' -d '{"from":"alice","to":"bob","amount":30}'   # same answer, applied once
+curl -X POST localhost:8080/transfers -H 'Correlation-Id: t-1' -d '{"from":"alice","to":"bob","amount":30}'
+curl -X POST localhost:8080/transfers -H 'Correlation-Id: t-1' -d '{"from":"alice","to":"bob","amount":30}'   # same answer, applied once
 curl localhost:8080/accounts/alice                                                                             # balance 70
 ```
 
@@ -44,10 +44,10 @@ curl localhost:8080/accounts/alice                                              
   spends on one balance (exactly the funded number succeed) and 64,000 random transfers across 10
   accounts (money is conserved, no balance is negative, and every account's balance equals the sum
   of its journal).
-- **Idempotent retries.** The first request with a key claims it. A retry with the same key returns the
+- **Idempotent retries.** The first request with a correlation id claims it. A retry with the same id returns the
   original outcome, including a rejection, and never touches the balances. A retry that arrives while
   the original is still running waits for its result instead of applying the transfer a second time.
-  Reusing a key for a different body returns `409`.
+  Reusing a correlation id for a different body returns `409`.
 - **Unrelated accounts proceed in parallel.** Transfers on disjoint account pairs never wait on each other.
   A test blocks one transfer inside its lock and checks that a transfer on other accounts completes.
 - **Double-entry journal.** Each account keeps a list of postings. Every applied transfer posts a debit
@@ -67,9 +67,9 @@ atomicity contract and the same "no negative balance" check inside the database 
 
 ## Trade-offs
 
-- **Everything is in memory.** Restarting the process loses all accounts, balances and idempotency keys.
-  This is what the brief asked for; durability is the job of the storage engine behind `LedgerStore`.
-- **Idempotency records are never evicted.** Keys stay in memory for the life of the process, so memory
+- **Everything is in memory.** Restarting the process loses all accounts, balances and correlation ids.
+  Durability is the job of the storage engine behind `LedgerStore`.
+- **Idempotency records are never evicted.** Correlation ids stay in memory for the life of the process, so memory
   grows with the number of transfers. A production version would expire keys after a retention window
   and persist them in the same transaction as the transfer.
 - **Idempotency state sits in `Ledger`, not in the store.** This keeps the store interface small, but a
