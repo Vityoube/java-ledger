@@ -1,13 +1,13 @@
 package com.vkalashnykov.ledger;
 
-import com.vkalashnykov.ledger.TransferOutcome.RejectionReason;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.function.Consumer;
+
+import static com.vkalashnykov.ledger.RejectionReason.*;
 
 public final class InMemoryLedgerStore implements LedgerStore {
 
@@ -42,7 +42,7 @@ public final class InMemoryLedgerStore implements LedgerStore {
         AccountCell from = accounts.get(request.from());
         AccountCell to = accounts.get(request.to());
         if (from == null || to == null) {
-            return TransferOutcome.rejected(transferId, request, RejectionReason.UNKNOWN_ACCOUNT);
+            return TransferOutcome.rejected(transferId, request, UNKNOWN_ACCOUNT);
         }
 
         AccountCell first = from.id.compareTo(to.id) < 0 ? from : to;
@@ -51,7 +51,7 @@ public final class InMemoryLedgerStore implements LedgerStore {
             onFirstLock.accept(first.id);
             synchronized (second) {
                 if (from.balance < request.amount()) {
-                    return TransferOutcome.rejected(transferId, request, RejectionReason.INSUFFICIENT_FUNDS);
+                    return TransferOutcome.rejected(transferId, request, INSUFFICIENT_FUNDS);
                 }
                 from.post(transferId, -request.amount());
                 to.post(transferId, request.amount());

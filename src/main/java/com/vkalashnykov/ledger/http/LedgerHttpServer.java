@@ -19,6 +19,8 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import static com.vkalashnykov.ledger.Status.*;
+
 public final class LedgerHttpServer implements AutoCloseable {
 
     private static final String ROOT_PATH = "/";
@@ -121,7 +123,7 @@ public final class LedgerHttpServer implements AutoCloseable {
 
     private Response getAccount(String id) {
         return ledger.account(id)
-                .<Response>map(account -> new Response(HttpStatus.OK, account))
+                .map(account -> new Response(HttpStatus.OK, account))
                 .orElseGet(() -> error(HttpStatus.NOT_FOUND, "no such account"));
     }
 
@@ -142,7 +144,7 @@ public final class LedgerHttpServer implements AutoCloseable {
                 outcome.request().from(),
                 outcome.request().to(),
                 outcome.request().amount());
-        HttpStatus status = outcome.status() == TransferOutcome.Status.COMPLETED
+        HttpStatus status = outcome.status() == COMPLETED
                 ? HttpStatus.CREATED
                 : HttpStatus.UNPROCESSABLE_ENTITY;
         return new Response(status, view);

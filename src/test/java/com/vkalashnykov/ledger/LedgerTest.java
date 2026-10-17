@@ -1,10 +1,10 @@
 package com.vkalashnykov.ledger;
 
 import com.vkalashnykov.ledger.InMemoryLedgerStore.JournalEntry;
-import com.vkalashnykov.ledger.TransferOutcome.RejectionReason;
-import com.vkalashnykov.ledger.TransferOutcome.Status;
 import org.junit.jupiter.api.Test;
 
+import static com.vkalashnykov.ledger.RejectionReason.*;
+import static com.vkalashnykov.ledger.Status.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -63,8 +63,8 @@ class LedgerTest {
 
         TransferOutcome outcome = ledger.transfer("k1", new TransferRequest("alice", "bob", 51));
 
-        assertEquals(Status.REJECTED, outcome.status());
-        assertEquals(RejectionReason.INSUFFICIENT_FUNDS, outcome.reason());
+        assertEquals(REJECTED, outcome.status());
+        assertEquals(INSUFFICIENT_FUNDS, outcome.reason());
         assertEquals(50, balance("alice"));
         assertEquals(0, balance("bob"));
     }
@@ -75,8 +75,8 @@ class LedgerTest {
 
         TransferOutcome outcome = ledger.transfer("k1", new TransferRequest("alice", "ghost", 10));
 
-        assertEquals(Status.REJECTED, outcome.status());
-        assertEquals(RejectionReason.UNKNOWN_ACCOUNT, outcome.reason());
+        assertEquals(REJECTED, outcome.status());
+        assertEquals(UNKNOWN_ACCOUNT, outcome.reason());
         assertEquals(100, balance("alice"));
     }
 
@@ -124,7 +124,7 @@ class LedgerTest {
         ledger.transfer("k2", new TransferRequest("bob", "alice", 50));
         TransferOutcome retry = ledger.transfer("k1", request);
 
-        assertEquals(RejectionReason.INSUFFICIENT_FUNDS, rejected.reason());
+        assertEquals(INSUFFICIENT_FUNDS, rejected.reason());
         assertEquals(rejected, retry);
         assertEquals(50, balance("alice"));
         assertEquals(0, balance("bob"));

@@ -1,7 +1,6 @@
 package com.vkalashnykov.ledger;
 
 import com.vkalashnykov.ledger.InMemoryLedgerStore.JournalEntry;
-import com.vkalashnykov.ledger.TransferOutcome.Status;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -17,7 +16,6 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -197,7 +195,6 @@ class ConcurrencyTest {
         }
     }
 
-    /** Runs all tasks on a pool of {@code threads}, released together, and returns their results in order. */
     private static <T> List<T> runConcurrently(int threads, List<Callable<T>> tasks) throws Exception {
         ExecutorService pool = Executors.newFixedThreadPool(threads);
         try {
