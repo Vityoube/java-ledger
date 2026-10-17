@@ -52,7 +52,7 @@ public final class LedgerHttpServer implements AutoCloseable {
 
     private final Ledger ledger;
     private final HttpServer server;
-    private final ExecutorService executor = Executors.newCachedThreadPool();
+    private final ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor();
     private final CountDownLatch stopped = new CountDownLatch(1);
 
     public LedgerHttpServer(Ledger ledger, InetSocketAddress address) throws IOException {
