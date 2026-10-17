@@ -29,7 +29,9 @@ class LedgerHttpServerTest {
     @BeforeEach
     void start() throws Exception {
         server = new LedgerHttpServer(new Ledger(), new InetSocketAddress("localhost", 0));
-        server.start();
+        Thread serving = new Thread(server::start);
+        serving.setDaemon(true);
+        serving.start();
         base = "http://localhost:" + server.port();
     }
 

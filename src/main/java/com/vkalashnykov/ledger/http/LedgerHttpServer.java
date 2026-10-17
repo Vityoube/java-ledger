@@ -15,6 +15,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.util.Map;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -49,6 +50,7 @@ public final class LedgerHttpServer implements AutoCloseable {
     private final Ledger ledger;
     private final HttpServer server;
     private final ExecutorService executor = Executors.newCachedThreadPool();
+    private final CountDownLatch stopped = new CountDownLatch(1);
 
     public LedgerHttpServer(Ledger ledger, InetSocketAddress address) throws IOException {
         this.ledger = ledger;
@@ -59,6 +61,11 @@ public final class LedgerHttpServer implements AutoCloseable {
 
     public void start() {
         server.start();
+        try {
+            stopped.await();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
     }
 
     public int port() {
@@ -69,6 +76,7 @@ public final class LedgerHttpServer implements AutoCloseable {
     public void close() {
         server.stop(0);
         executor.shutdownNow();
+        stopped.countDown();
     }
 
     private void handle(HttpExchange exchange) throws IOException {
